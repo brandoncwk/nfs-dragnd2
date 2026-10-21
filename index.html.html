@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dragon Underground 2</title>
+<style>
+  :root {
+    --bg: #0d0620; --panel: #1a0b3a; --pink: #ff2e97; --cyan: #19e3ff;
+    --yellow: #ffd23f; --text: #f3e9ff; --muted: #a58fd0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 24px 16px 48px; background: var(--bg); color: var(--text);
+    font-family: "Trebuchet MS", Verdana, sans-serif; line-height: 1.4;
+  }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 {
+    font-family: Impact, "Arial Black", sans-serif; font-style: italic; font-weight: 400;
+    font-size: clamp(2.2rem, 6vw, 3.6rem); margin: 0; letter-spacing: 1px;
+    color: var(--yellow); text-shadow: 3px 3px 0 var(--pink), 0 0 24px rgba(255,46,151,.6);
+    transform: skewX(-6deg); transform-origin: left;
+  }
+  .tag { margin: 6px 0 20px; color: var(--muted); }
+  .layout { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 800px) { .layout { grid-template-columns: 1fr; } }
+
+  .stage { border: 2px solid var(--pink); border-radius: 6px; overflow: hidden;
+           box-shadow: 0 0 28px rgba(255,46,151,.35); background: #000; }
+  .stage svg { display: block; width: 100%; height: auto; }
+
+  .garage { background: var(--panel); border: 2px solid var(--cyan); border-radius: 6px;
+            padding: 14px; box-shadow: 0 0 22px rgba(25,227,255,.25); }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+  button { font: inherit; cursor: pointer; color: var(--text); }
+  button:focus-visible, input:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .tab {
+    background: transparent; border: 2px solid var(--muted); padding: 5px 12px;
+    font-family: Impact, "Arial Black", sans-serif; font-style: italic; letter-spacing: .5px;
+    transform: skewX(-10deg);
+  }
+  .tab[aria-selected="true"] { background: var(--pink); border-color: var(--pink); color: #fff; }
+  .options { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; min-height: 120px; }
+  .opt { background: #261152; border: 2px solid #3b2275; border-radius: 4px; padding: 10px 6px; }
+  .opt[aria-pressed="true"] { border-color: var(--cyan); box-shadow: inset 0 0 12px rgba(25,227,255,.4); }
+  .swatches { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .sw { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff3; }
+  .sw[aria-pressed="true"] { border-color: #fff; }
+  .pickers { display: flex; gap: 18px; flex-wrap: wrap; color: var(--muted); }
+  .pickers input { vertical-align: middle; margin-left: 6px; width: 44px; height: 30px; border: 0; background: none; }
+
+  .stats { margin-top: 18px; }
+  .stat { display: grid; grid-template-columns: 130px 1fr 32px; gap: 8px; align-items: center; margin: 6px 0; font-size: .9rem; }
+  .bar { height: 10px; background: #0d0620; border-radius: 5px; overflow: hidden; }
+  .fill { height: 100%; background: linear-gradient(90deg, var(--cyan), var(--pink)); transition: width .25s; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+  .btn { background: var(--yellow); color: #1a0b3a; border: 0; padding: 8px 14px; font-weight: bold; border-radius: 3px; }
+  .btn.alt { background: transparent; color: var(--text); border: 2px solid var(--muted); }
+  @media (prefers-reduced-motion: reduce) { .fill { transition: none; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>Dragon Underground 2</h1>
+  <p class="tag">Pick your parts. Hit the street.</p>
+
+  <div class="layout">
+    <div class="stage">
+      <!-- Every layer below is drawn on the same 600x400 canvas, so they always line up. -->
+      <svg id="scene" viewBox="0 0 600 400" width="600" height="400" role="img" aria-label="Your customized dragon">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#12062e"/><stop offset="1" stop-color="#6a1b78"/>
+          </linearGradient>
+          <linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#ff2e97"/><stop offset=".35" stop-color="#ffd23f"/>
+            <stop offset=".65" stop-color="#19e3ff"/><stop offset="1" stop-color="#a64dff"/>
+          </linearGradient>
+          <filter id="blur" x="-20%" y="-100%" width="140%" height="300%"><feGaussianBlur stdDeviation="7"/></filter>
+        </defs>
+
+        <!-- Background: night city and road -->
+        <rect width="600" height="400" fill="url(#sky)"/>
+        <g fill="#1b0a3d">
+          <rect x="10" y="210" width="50" height="130"/><rect x="70" y="170" width="40" height="170"/>
+          <rect x="120" y="230" width="60" height="110"/><rect x="400" y="190" width="45" height="150"/>
+          <rect x="455" y="150" width="50" height="190"/><rect x="515" y="220" width="70" height="120"/>
+        </g>
+        <g fill="#ffd23f" opacity=".7">
+          <rect x="20" y="225" width="5" height="5"/><rect x="38" y="250" width="5" height="5"/>
+          <rect x="80" y="190" width="5" height="5"/><rect x="95" y="225" width="5" height="5"/>
+          <rect x="465" y="170" width="5" height="5"/><rect x="485" y="210" width="5" height="5"/>
+          <rect x="412" y="215" width="5" height="5"/><rect x="540" y="245" width="5" height="5"/>
+        </g>
+        <rect y="332" width="600" height="68" fill="#14102a"/>
+        <g stroke="#ffd23f" stroke-width="4" stroke-dasharray="40 30" opacity=".7">
+          <line x1="0" y1="375" x2="600" y2="375"/>
+        </g>
+
+        <!-- Customizable layers (back to front) -->
+        <g id="layer-glow"></g>
+        <g id="layer-wings"></g>
+        <g id="layer-spoiler"></g>
+
+        <!-- Base dragon: change this group to restyle the whole dragon -->
+        <g id="body" fill="var(--paint)" stroke="rgba(0,0,0,.4)" stroke-width="2" stroke-linejoin="round">
+          <path d="M190 232 C130 245 100 300 45 282 C85 335 175 325 225 280Z"/>
+          <rect x="226" y="268" width="30" height="64" rx="13"/>
+          <ellipse cx="242" cy="333" rx="26" ry="8"/>
+          <rect x="338" y="268" width="30" height="64" rx="13"/>
+          <ellipse cx="356" cy="333" rx="26" ry="8"/>
+          <ellipse cx="290" cy="238" rx="112" ry="56"/>
+          <path d="M350 205 C395 190 410 160 415 135 L455 150 C450 190 420 240 370 270Z"/>
+          <ellipse cx="445" cy="142" rx="42" ry="25" transform="rotate(15 445 142)"/>
+          <ellipse cx="300" cy="262" rx="85" ry="26" fill="#fff" fill-opacity=".22" stroke="none"/>
+          <circle cx="458" cy="134" r="6" fill="#fff" stroke="none"/>
+          <circle cx="460" cy="135" r="3" fill="#111" stroke="none"/>
+          <circle cx="478" cy="148" r="2.5" fill="#111" stroke="none"/>
+        </g>
+
+        <g id="layer-horns"></g>
+        <g id="layer-nitro"></g>
+      </svg>
+    </div>
+
+    <section class="garage" aria-label="Garage">
+      <div class="tabs" role="tablist" id="tabs"></div>
+      <div id="panel"></div>
+      <div class="stats" id="stats"></div>
+      <div class="actions">
+        <button class="btn" id="random">Randomize</button>
+        <button class="btn alt" id="reset">Reset</button>
+        <button class="btn alt" id="save">Save picture</button>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+/* ---------- PARTS: add new accessories here ----------
+   Each option is { name, svg, stats:[fire, hoard, downforce] }.
+   To use your own art instead of code-drawn shapes, replace `svg` with
+   img:'my-wings.png' (a transparent 600x400 PNG with the part already in position). */
+const PARTS = {
+  horns: { label: 'Horns', options: [
+    { name: 'None', svg: '', stats: [0,0,0] },
+    { name: 'Stock', stats: [2,0,0], svg:
+      '<g fill="var(--trim)" stroke="#0005" stroke-width="2"><path d="M422 122 L402 88 L438 114Z"/><path d="M448 120 L436 84 L464 116Z"/></g>' },
+    { name: 'Spikes', stats: [5,0,-2], svg:
+      '<g fill="var(--trim)" stroke="#0005" stroke-width="2"><path d="M416 126 L396 78 L432 116Z"/><path d="M434 120 L424 70 L452 116Z"/><path d="M452 122 L450 74 L468 120Z"/></g>' },
+    { name: 'Swept back', stats: [3,0,6], svg:
+      '<g fill="var(--trim)" stroke="#0005" stroke-width="2"><path d="M420 124 C395 100 380 82 352 78 C380 96 392 116 432 122Z"/><path d="M440 120 C420 96 408 78 384 70 C408 90 418 108 450 120Z"/></g>' }
+  ]},
+  wings: { label: 'Wings', options: [
+    { name: 'None', svg: '', stats: [0,0,0] },
+    { name: 'Bat wings', stats: [4,5,8], svg:
+      '<path d="M265 205 C235 125 170 85 110 95 C145 115 150 135 142 158 C172 148 190 158 196 184 C220 170 240 184 252 214Z" fill="var(--trim)" stroke="#0006" stroke-width="2"/>' },
+    { name: 'Carbon fins', stats: [0,0,16], svg:
+      '<path d="M270 205 L150 120 L120 135 L235 225Z" fill="#1c1c24" stroke="var(--trim)" stroke-width="4" stroke-linejoin="round"/>' },
+    { name: 'Flame wings', stats: [15,-4,4], svg:
+      '<g stroke="#0006" stroke-width="2"><path d="M265 205 C235 125 170 85 110 95 C145 115 150 135 142 158 C172 148 190 158 196 184 C220 170 240 184 252 214Z" fill="#ff7a18"/><path d="M262 205 C240 150 200 120 160 118 C180 135 182 150 178 165 C200 165 215 175 222 195Z" fill="#ffd23f" stroke="none"/></g>' }
+  ]},
+  spoiler: { label: 'Tail', options: [
+    { name: 'None', svg: '', stats: [0,0,0] },
+    { name: 'GT wing', stats: [0,0,14], svg:
+      '<rect x="41" y="232" width="8" height="50" fill="#1c1c24"/><rect x="12" y="222" width="68" height="12" rx="4" fill="var(--trim)" stroke="#0006" stroke-width="2"/>' },
+    { name: 'Tail fins', stats: [0,2,8], svg:
+      '<g fill="var(--trim)" stroke="#0006" stroke-width="2" stroke-linejoin="round"><path d="M100 285 L80 240 L130 275Z"/><path d="M135 278 L120 235 L165 270Z"/></g>' },
+    { name: 'Double decker', stats: [0,-3,22], svg:
+      '<rect x="41" y="222" width="8" height="60" fill="#1c1c24"/><g fill="var(--trim)" stroke="#0006" stroke-width="2"><rect x="8" y="212" width="74" height="10" rx="4"/><rect x="14" y="234" width="62" height="9" rx="4"/></g>' }
+  ]},
+  glow: { label: 'Underglow', options: [
+    { name: 'None', svg: '', stats: [0,0,0] },
+    { name: 'Blue', stats: [0,3,0], svg: '<ellipse cx="290" cy="338" rx="235" ry="18" fill="#19e3ff" filter="url(#blur)"/>' },
+    { name: 'Pink', stats: [0,3,0], svg: '<ellipse cx="290" cy="338" rx="235" ry="18" fill="#ff2e97" filter="url(#blur)"/>' },
+    { name: 'Rainbow', stats: [0,8,0], svg: '<ellipse cx="290" cy="338" rx="235" ry="18" fill="url(#rainbow)" filter="url(#blur)"/>' }
+  ]},
+  nitro: { label: 'Nitrous', options: [
+    { name: 'None', svg: '', stats: [0,0,0] },
+    { name: 'Flame breath', stats: [22,0,0], svg:
+      '<path d="M486 148 C520 130 545 140 580 128 C555 150 560 165 585 175 C545 170 520 168 488 160Z" fill="#ff7a18"/><path d="M490 150 C515 142 535 148 555 142 C542 154 545 160 558 164 C530 162 512 162 492 157Z" fill="#ffd23f"/>' },
+    { name: 'Blue blast', stats: [40,-6,0], svg:
+      '<path d="M486 146 C520 110 560 128 600 100 C575 140 590 170 600 195 C555 175 520 180 488 162Z" fill="#2b6bff"/><path d="M490 150 C520 135 550 148 585 130 C568 152 575 165 585 178 C545 168 520 168 492 158Z" fill="#19e3ff"/><path d="M492 152 C515 148 535 154 552 150 C542 158 545 162 552 164 C525 163 510 162 494 158Z" fill="#fff"/>' }
+  ]}
+};
+
+const PAINTS = ['#7c3aed', '#e11d48', '#16a34a', '#f59e0b', '#0ea5e9', '#f472b6', '#e5e7eb', '#1f2937'];
+const STAT_NAMES = ['Fire Output', 'Hoard Capacity', 'Tail Downforce'];
+const DEFAULT = { paint: PAINTS[0], trim: '#ffd23f', horns: 1, wings: 0, spoiler: 0, glow: 1, nitro: 0 };
+
+let state = { ...DEFAULT };
+let tab = 'paint';
+const $ = id => document.getElementById(id);
+const scene = $('scene');
+
+function render() {
+  // Scene
+  for (const k in PARTS) {
+    const o = PARTS[k].options[state[k]];
+    $('layer-' + k).innerHTML = o.img
+      ? `<image href="${o.img}" x="0" y="0" width="600" height="400"/>`
+      : o.svg;
+  }
+  scene.style.setProperty('--paint', state.paint);
+  scene.style.setProperty('--trim', state.trim);
+
+  // Tabs
+  const tabs = [['paint', 'Paint'], ...Object.entries(PARTS).map(([k, p]) => [k, p.label])];
+  $('tabs').innerHTML = tabs.map(([k, label]) =>
+    `<button class="tab" role="tab" aria-selected="${k === tab}" data-tab="${k}">${label}</button>`).join('');
+
+  // Panel
+  if (tab === 'paint') {
+    $('panel').innerHTML =
+      `<div class="swatches">${PAINTS.map(c =>
+        `<button class="sw" style="background:${c}" aria-label="Paint ${c}" aria-pressed="${state.paint === c}" data-paint="${c}"></button>`).join('')}</div>
+       <div class="pickers">
+         <label>Custom paint<input type="color" id="paintPick" value="${state.paint}"></label>
+         <label>Trim color<input type="color" id="trimPick" value="${state.trim}"></label>
+       </div>`;
+    $('paintPick').oninput = e => { state.paint = e.target.value; render(); };
+    $('trimPick').oninput = e => { state.trim = e.target.value; render(); };
+  } else {
+    $('panel').innerHTML = `<div class="options">${PARTS[tab].options.map((o, i) =>
+      `<button class="opt" aria-pressed="${state[tab] === i}" data-opt="${i}">${o.name}</button>`).join('')}</div>`;
+  }
+
+  // Joke stats: base 40 plus whatever the chosen parts add
+  const totals = [40, 40, 40];
+  for (const k in PARTS) PARTS[k].options[state[k]].stats.forEach((v, i) => totals[i] += v);
+  $('stats').innerHTML = totals.map((v, i) => {
+    const n = Math.max(0, Math.min(100, v));
+    return `<div class="stat"><span>${STAT_NAMES[i]}</span><div class="bar"><div class="fill" style="width:${n}%"></div></div><span>${n}</span></div>`;
+  }).join('');
+}
+
+// Clicks
+document.addEventListener('click', e => {
+  const t = e.target.closest('button'); if (!t) return;
+  if (t.dataset.tab) { tab = t.dataset.tab; render(); }
+  else if (t.dataset.paint) { state.paint = t.dataset.paint; render(); }
+  else if (t.dataset.opt) { state[tab] = +t.dataset.opt; render(); }
+});
+
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+$('random').onclick = () => {
+  state.paint = pick(PAINTS); state.trim = pick(PAINTS);
+  for (const k in PARTS) state[k] = Math.floor(Math.random() * PARTS[k].options.length);
+  render();
+};
+$('reset').onclick = () => { state = { ...DEFAULT }; render(); };
+
+// Save the current dragon as a PNG
+$('save').onclick = () => {
+  const xml = new XMLSerializer().serializeToString(scene);
+  const url = URL.createObjectURL(new Blob([xml], { type: 'image/svg+xml' }));
+  const img = new Image();
+  img.onload = () => {
+    const c = document.createElement('canvas'); c.width = 1200; c.height = 800;
+    c.getContext('2d').drawImage(img, 0, 0, 1200, 800);
+    URL.revokeObjectURL(url);
+    c.toBlob(b => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b); a.download = 'my-dragon.png'; a.click();
+    });
+  };
+  img.src = url;
+};
+
+render();
+</script>
+</body>
+</html>
